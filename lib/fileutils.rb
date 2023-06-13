@@ -2459,7 +2459,10 @@ module FileUtils
   end   # class Entry_
 
   def fu_list(arg)   #:nodoc:
-    [arg].flatten.map {|path| File.path(path) }
+    [arg].flatten.flat_map do |path|
+      glob_result = Dir[File.path(path)]
+      glob_result.any? ? glob_result : path
+    end
   end
   private_module_function :fu_list
 
@@ -2475,7 +2478,9 @@ module FileUtils
     if tmp = Array.try_convert(src)
       tmp.each do |s|
         s = File.path(s)
-        yield s, (target_directory ? File.join(dest, File.basename(s)) : dest)
+        Dir.glob(s) do |expanded_s|
+          yield expanded_s, (target_directory ? File.join(dest, File.basename(expanded_s)) : dest)
+        end
       end
     else
       src = File.path(src)

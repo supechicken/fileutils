@@ -2478,16 +2478,22 @@ module FileUtils
     if tmp = Array.try_convert(src)
       tmp.each do |s|
         s = File.path(s)
-        Dir.glob(s) do |expanded_s|
-          yield expanded_s, (target_directory ? File.join(dest, File.basename(expanded_s)) : dest)
+        glob = Dir[s]
+
+        (glob.any? ? glob : [s]).each do |ss|
+          yield ss, (target_directory ? File.join(dest, File.basename(ss)) : dest)
         end
       end
     else
       src = File.path(src)
-      if target_directory and File.directory?(dest)
-        yield src, File.join(dest, File.basename(src))
-      else
-        yield src, File.path(dest)
+      glob = Dir[src]
+
+      (glob.any? ? glob : [src]).each do |s|
+        if target_directory and File.directory?(dest)
+          yield s, File.join(dest, File.basename(s))
+        else
+          yield s, File.path(dest)
+        end
       end
     end
   end
